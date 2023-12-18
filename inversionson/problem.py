@@ -5,7 +5,7 @@ TODO: Figure out what the previous iteration was. Probably this is best figured 
 """
 from pathlib import Path
 from typing import List, Optional, Union
-from optson.problem import AbstractProblem, CallCounter
+from optson.problem import Problem as Prob
 from optson.vector import Vec
 from inversionson.helpers.regularization_helper import RegularizationHelper
 from inversionson.helpers.gradient_summer import GradientSummer
@@ -18,13 +18,13 @@ from inversionson.utils import (
 )
 from inversionson.project import Project
 import numpy as np
-from optson.problem import ModelProxy
-from optson.preconditioner import AbstractPreconditioner
+from optson.model import ModelProxy
+from optson.preconditioner import Preconditioner
 import h5py
 from inversionson.utils import get_h5_parameter_indices, get_elemental_parameter_indices
 
 
-class InversionsonAdamUpdatePrecondtioner(AbstractPreconditioner):
+class InversionsonAdamUpdatePrecondtioner(Preconditioner):
     def __init__(self, project: Project):
         self.project = project
 
@@ -76,7 +76,7 @@ class InversionsonAdamUpdatePrecondtioner(AbstractPreconditioner):
         return x_new
 
 
-class Problem(AbstractProblem):
+class Problem(Prob):
     """This is the implementation of Problem that allows us to pass
     gradients and misfits to Optson.
 
@@ -179,7 +179,6 @@ class Problem(AbstractProblem):
             return None
         return self.project.event_db.get_event_names(previous_control_indices)
 
-    @CallCounter
     def f(self, model: ModelProxy, indices: Optional[List[int]] = None) -> float:
         """Computes the misfit for a model and a set of indices.
         If no indices are given, all events will be computed.
@@ -276,7 +275,6 @@ class Problem(AbstractProblem):
             if self.smooth_gradients:
                 self._write_smoothing_task(model, indices, raw_grad_f)
 
-    @CallCounter
     def g(self, model: ModelProxy, indices: Optional[List[int]] = None) -> Vec:
         """Computes the gradient for Optson.
         We first call _g to compute raw gradients for all possible subsets.

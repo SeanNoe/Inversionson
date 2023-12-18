@@ -2,14 +2,14 @@ from abc import abstractmethod
 from typing import Dict, List, Optional, Tuple, Union
 from pathlib import Path
 from inversionson.project import Project
-from optson.batch_manager import AbstractBatchManager
+from optson.batch_manager import BatchManager
 from lasif.tools.query_gcmt_catalog import get_random_mitchell_subset
 import json
 import toml
 import numpy as np
 
 
-class InversionsonBatchManager(AbstractBatchManager):
+class InversionsonBatchManager(BatchManager):
     def __init__(
         self, project: Project, batch_size: int, use_overlapping_batches: bool = True
     ):

@@ -7,7 +7,7 @@ import toml
 import json
 from pathlib import Path
 import salvus.flow.api as sapi  # type: ignore
-
+from salvus.flow.sites import site_utils
 from inversionson.helpers.remote_job_listener import RemoteJobListener
 from salvus.flow.sites import job, remote_io_site  # type: ignore
 from inversionson.utils import (
@@ -275,17 +275,17 @@ class IterationListener(object):
         wall_time = self.project.config.hpc.proc_wall_time
 
         commands = [
-            remote_io_site.site_utils.RemoteCommand(
+            site_utils.RemoteCommand(
                 command="mkdir output", execute_with_mpi=False
             ),
-            remote_io_site.site_utils.RemoteCommand(
+            site_utils.RemoteCommand(
                 command=f"python {remote_script} {remote_toml}", execute_with_mpi=False
             ),
         ]
 
         if self.project.config.hpc.conda_env_name:
             conda_command = [
-                remote_io_site.site_utils.RemoteCommand(
+                site_utils.RemoteCommand(
                     command=f"conda activate {self.project.config.hpc.conda_env_name}",
                     execute_with_mpi=False,
                 )
@@ -293,7 +293,7 @@ class IterationListener(object):
             commands = conda_command + commands
             if self.project.config.hpc.conda_location:
                 source_command = [
-                    remote_io_site.site_utils.RemoteCommand(
+                    site_utils.RemoteCommand(
                         command=f"source {self.project.config.hpc.conda_location}",
                         execute_with_mpi=False,
                     )
