@@ -6,13 +6,13 @@ from setuptools import setup, find_packages
 
 # Be very visible with the requires Python version!
 _v = sys.version_info
-if (_v.major, _v.minor) != (3, 7):
+if (_v.major, _v.minor) != (3, 9):
     print("\n\n============================================")
     print("============================================")
-    print("        Inversionson requires Python 3.7!        ")
+    print("        Inversionson requires Python 3.9!        ")
     print("============================================")
     print("============================================\n\n")
-    raise Exception("Inversionson requires Python 3.7")
+    raise Exception("Inversionson requires Python 3.9")
 
 
 # Import the version string.
@@ -39,7 +39,7 @@ setup_config = dict(
         "Intended Audience :: Science/Research",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Physics",
     ],
