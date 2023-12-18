@@ -217,8 +217,8 @@ def run(info):
 
     minimum_period = info["minimum_period"]
     maximum_period = info["maximum_period"]
-    freqmin = 1.0 / minimum_period
-    freqmax = 1.0 / maximum_period
+    freqmin = 1.0 / maximum_period
+    freqmax = 1.0 / minimum_period
     start_time_in_s = info["start_time_in_s"]
 
     output_folder = "output"
