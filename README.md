@@ -118,23 +118,23 @@ Some more configurations might be necessary. Below are my working settings for s
             partition = "normal"
             debug_partition = "debug"
             path_to_slurm_binaries = "/usr/bin"
-        # Nov 2019: This is a workaround for a bug in the slurm version the
-        # CSCS deployed. They are aware of it and are working on a fix.
-            omit_default_srun_arguments = true
-        # These are account/project dependent!
-        [sites.daint.site_specific.additional_sbatch_arguments]
-            name = "constraint"
-            value = "gpu"
-        [sites.daint.site_specific.additional_sbatch_arguments]
-            name = "account"
-            value = "s1238"
-        [sites.daint.site_specific.modules_to_switch]
-            old = "PrgEnv-cray"
-            new = "PrgEnv-gnu"
-        # Load an ABI compatible MPI module for Salvus to use.
-        [sites.daint.site_specific.modules_to_switch]
-                old = "cray-mpich"
-                new = "cray-mpich-abi"
+            # Nov 2019: This is a workaround for a bug in the slurm version the
+            # CSCS deployed. They are aware of it and are working on a fix.
+                omit_default_srun_arguments = true
+            # These are account/project dependent!
+            [sites.daint.site_specific.additional_sbatch_arguments]
+                name = "constraint"
+                value = "gpu"
+            [sites.daint.site_specific.additional_sbatch_arguments]
+                name = "account"
+                value = "s1238"
+            [sites.daint.site_specific.modules_to_switch]
+                old = "PrgEnv-cray"
+                new = "PrgEnv-gnu"
+            # Load an ABI compatible MPI module for Salvus to use.
+            [sites.daint.site_specific.modules_to_switch]
+                    old = "cray-mpich"
+                    new = "cray-mpich-abi"
 
 ```
 
