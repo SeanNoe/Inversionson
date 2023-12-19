@@ -120,7 +120,7 @@ Some more configurations might be necessary. Below are my working settings for s
             path_to_slurm_binaries = "/usr/bin"
             # Nov 2019: This is a workaround for a bug in the slurm version the
             # CSCS deployed. They are aware of it and are working on a fix.
-                omit_default_srun_arguments = true
+            omit_default_srun_arguments = true
             # These are account/project dependent!
             [sites.daint.site_specific.additional_sbatch_arguments]
                 name = "constraint"
