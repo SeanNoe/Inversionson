@@ -35,7 +35,7 @@ In the following, we set up the environment and all required packages for the gl
 ## Local machine
 
 ### Install Salvus
-Detailed info in the documentation at www.mondaic.com.
+Detailed info in the documentation on www.mondaic.com.
 ```
 # Python 3.9
 curl https://mondaic.com/environment-py39.yml -o environment.yml
@@ -227,7 +227,7 @@ cd ..
 ### MultiMesh
 
 ```
-git clone https://github.com/solvithrastar/MultiMesh.git
+git clone https://github.com/SeanNoe/MultiMesh.git
 cd MultiMesh
 pip install -e .
 cd ..
@@ -238,8 +238,6 @@ cd ..
 ```
 git clone https://github.com/SeanNoe/Inversionson.git
 cd Inversionson
-git fetch
-git checkout -t origin/optson_names
 pip install -e .
 cd ..
 ```
@@ -248,6 +246,8 @@ This should be it.
 
 
 # Dummy Project
+
+This is a little tutorial to set up a dummy problem. Below, the configurations for Inversionson are described in detail. For reference, all the config-files and the script to create the simple starting model can be found in the `Tutorial`-folder.
 
 ### House keeping
 
