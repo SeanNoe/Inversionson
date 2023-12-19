@@ -30,25 +30,14 @@ The design principle of Inversionson is that it runs on a machine that can in pr
 This machine only serves as a controller and does not do any heavy computations. It submits jobs to HPC clusters to do everything that would normally take time.
 This is done in order to make the workflow as parallel as possible, and it saves a lot of time.
 
-## Central Libraries
-
-Inversionson is not a standalone package but rather a wrapper around a few key FWI software.
-It is thus important to have these software installed and available if one is interested in using Inversionson.
-The main, non-standard software packaged that Inversionson requires are
-[LASIF](https://dirkphilip.github.io/LASIF_2.0/),
-[MultiMesh](https://github.com/solvithrastar/MultiMesh) and
-[Salvus](https://mondaic.com/).
-
 # Inversionson Setup and Installation
 
-Here, we set up the environment and all required packages for the global full-waveform inversion workflow on a remote.
-
-Make sure to first install either `conda` or `mamba`. The following commands will run with `mamba` as it is much faster.
+In the following, we set up the environment and all required packages for the global full-waveform inversion workflow on a remote machine. Make sure to first install either `conda` or `mamba`. The following commands are demonstrated with `mamba` as it is much faster compared to `conda`.
 
 ## Local machine
 
-### Install Salvus (more info in the documentation at mondaic.com)
-
+### Install Salvus
+Detailed info in the documentation at www.mondaic.com.
 ```
 # Python 3.9
 curl https://mondaic.com/environment-py39.yml -o environment.yml
@@ -87,7 +76,7 @@ The setup for the remote site is a bit more involved. At the beginning choose re
 salvus-cli add-site
 ```
 
-If information not given below, please select the default option.
+Recommended options. If information not given below, please select the default option.
 
 `site-type: slurm`,<br>
 `name: daint`,<br>
@@ -104,7 +93,7 @@ The run and tmp directory of Salvus tend to get filled up quickly. Set them up o
 `partition: normal`,<br>
 `path_to_slurm_binaries: /usr/bin`<br>
 
-There should be an entry called daint in <br>
+There should be an entry called `daint` in <br>
 `salvus-cli edit-config`
 
 Some more configurations might be necessary. Below are my working settings for site `daint`. Change settings in `salvus-cli edit-config` to match the following. You may have to add/remove some lines.
@@ -135,27 +124,27 @@ Some more configurations might be necessary. Below are my working settings for s
         # CSCS deployed. They are aware of it and are working on a fix.
             omit_default_srun_arguments = true
         # These are account/project dependent!
-            [[sites.daint.site_specific.additional_sbatch_arguments]]
-                name = "constraint"
-                value = "gpu"
-            [[sites.daint.site_specific.additional_sbatch_arguments]]
-                name = "account"
-                value = "s1238"
-            [[sites.daint.site_specific.modules_to_switch]]
-                old = "PrgEnv-cray"
-                new = "PrgEnv-gnu"
+        [sites.daint.site_specific.additional_sbatch_arguments]
+            name = "constraint"
+            value = "gpu"
+        [sites.daint.site_specific.additional_sbatch_arguments]
+            name = "account"
+            value = "s1238"
+        [sites.daint.site_specific.modules_to_switch]
+            old = "PrgEnv-cray"
+            new = "PrgEnv-gnu"
         # Load an ABI compatible MPI module for Salvus to use.
-            [[sites.daint.site_specific.modules_to_switch]]
+        [sites.daint.site_specific.modules_to_switch]
                 old = "cray-mpich"
                 new = "cray-mpich-abi"
 
 ```
 
-Run `salvus-cli init-site daint` to check if the site has been installed successfully. Optionally, do the same for the site `local`. If the site has been successfully installed, we can move on.
+Run `salvus-cli init-site daint` to check if the site has been installed successfully. Optionally, do the same for the site `local`. If the sites have been successfully installed and initialized, we can move on.
 
 ### LASIF installation
 
-LASIF is mostly an organization tool with some handy api functions for global or regional tomographic problems. It has data downloading options, processing functions, waveform vizualisation tools, and is able to compute gradients. Inversionson was written around LASIF for automatization purposes.
+LASIF is mostly an organization tool with some handy api functions for global or regional tomographic problems. It has data downloading options, processing functions, waveform vizualisation tools, and is able to compute gradients.
 
 In the same environment, run 
 ```
@@ -476,7 +465,7 @@ class InversionSettings:
 
 ### Adapt the optson configuration file
 
-The file `optson_config.py` takes care of `Optson`, the package responsible for optimization. The default option is a trust-region L-BFGS optimization method, shown to be efficient for tomographic problems. The only parameter that may make sense to adapt is the `initial_step_size` for the first update. 3% seems to be a decent value. If it is too high, it does not really matter as we simply compute the forward again.
+The file `optson_config.py` takes care of `Optson`, the package responsible for optimization. The default option is a trust-region L-BFGS optimization method, shown to be efficient for tomographic problems. The only parameter that may make sense to adapt is the `initial_step_size` for the first update. 3% seems to be a decent value. Even if the initial step length to too long, it will only result in some wasted forward computations at the start of the inversion until a model update is accepted.
 
 
 ```python
