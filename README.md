@@ -159,7 +159,7 @@ cd ..
 This package manages the creation of event-adaptive meshes.
 
 ```
-git clone https://github.com/solvithrastar/MultiMesh.git
+git clone https://github.com/SeanNoe/MultiMesh.git
 cd MultiMesh
 pip install -e .
 cd ..
@@ -171,8 +171,6 @@ This is the main package that we directly interact with. It is written as a wrap
 ```
 git clone https://github.com/SeanNoe/Inversionson.git
 cd Inversionson
-git fetch
-git checkout -t origin/optson_names
 pip install -e .
 cd ..
 ```
