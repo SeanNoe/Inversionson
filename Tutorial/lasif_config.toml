@@ -1,0 +1,55 @@
+[lasif_project]
+project_name = "LASIF_PROJECT"
+description = ""
+solver_used = "Salvus"
+
+[stacking]
+comment = "This is only used if you plan to do source stacking"
+use_stacking = false
+use_only_intersection = false
+
+[simulation_settings]
+comment = "This section controls both the way your data are processed and the input files to your numerical solver (i.e. how the source time function is processed). We currently only support bandpass_filtered_heaviside as a source time function."
+minimum_period_in_s = 150.0
+maximum_period_in_s = 200.0
+time_step_in_s = 0.1
+end_time_in_s = 3600.0
+start_time_in_s = -0.1
+source_time_function = "bandpass_filtered_heaviside"
+scale_data_to_synthetics = true
+
+[salvus_settings]
+comment = "You only need this if you plan to use Salvus as a numerical solver. LASIF should be general enough to work with other solvers too. Parameterization is only works for tti and rho-vp-vs."
+attenuation = true
+gradient_parameterization = "tti"
+absorbing_boundaries_in_km = 100.0
+site_name = "daint"
+ranks = 120
+wall_time_in_s = 3600
+ocean_loading = true
+
+[optimization_settings]
+comment = "Supported misfits are: tf_phase_misfit, cc_traveltime_misfit, waveform_misfit"
+misfit_type = "tf_phase_misfit"
+
+[lasif_project.domain_settings]
+comment = "Here you specify your domain with an hdf5 mesh and how thick of a boundary you need regarding data downloading (i.e. What is the minimum distance from the boundary which data can be downloded).\n"
+domain_file = "/home/sebastian/workflow_setup/INVERSIONSON_PROJECT/LASIF_PROJECT/MODELS/initial_model.h5"
+boundary_in_km = 100.0
+
+[lasif_project.download_settings]
+comment = "Time period to download, minimum interstation distance and channel priorities. If networks is 'None', all networks will be downloaded."
+seconds_before_event = 300.0
+seconds_after_event = 3600.0
+interstation_distance_in_m = 1000.0
+channel_priorities = [ "BH?", "LH[Z,N,E]", "HH[Z,N,E]", "EH[Z,N,E]", "MH[Z,N,E]",]
+location_priorities = [ "", "00", "10", "20", "01", "02",]
+networks = "None"
+
+[lasif_project.domain_settings.simple_domain]
+comment = "The domain file only works for Salvus meshes. If you wish to use another solver you can use a simple domain where your only inputs are max/min lat/lon and depth."
+max_lat = 45.0
+min_lat = 10.0
+max_lon = 45.0
+min_lon = 10.0
+depth_in_km = 500.0
