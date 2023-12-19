@@ -415,7 +415,7 @@ class MultiMesh(Component):
 
         if self.project.config.hpc.conda_env_name:
             conda_command = [
-                remote_io_site.site_utils.RemoteCommand(
+                site_utils.RemoteCommand(
                     command=f"conda activate {self.project.config.hpc.conda_env_name}",
                     execute_with_mpi=False,
                 )

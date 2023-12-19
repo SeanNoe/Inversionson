@@ -1,5 +1,5 @@
 from optson.optimizer import Optimizer
-from optson.methods import AdamUpdate, TRUpdate, SteepestDescentUpdate
+from optson.methods import AdamUpdate, BasicTRUpdate, SteepestDescentUpdate
 from optson.stopping_criterion import BasicStoppingCriterion
 from optson.monitor import BasicMonitor
 from inversionson.problem import Problem
@@ -49,9 +49,9 @@ def get_dynamic_mini_batch_opt(project: Project):
     )
     problem = Problem(project=project, smooth_gradients=True)
     st_upd = SteepestDescentUpdate(
-        initial=0.03, step_size_as_percentage=True, verbose=True
+        initial_step_size=0.03, initial_step_as_percentage=True, verbose=True
     )
-    update = TRUpdate(fallback=st_upd, verbose=True)
+    update = BasicTRUpdate(fallback=st_upd, verbose=True)
     return Optimizer(
         problem=problem,
         update=update,
