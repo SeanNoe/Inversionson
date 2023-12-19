@@ -20,8 +20,6 @@ There exists an [open-access paper about Inversionson](https://eartharxiv.org/re
 The paper describes workflows which were supported in [v0.0.1](https://github.com/solvithrastar/Inversionson/releases/tag/v0.0.1-minibatch) of Inversionson.
 In the latest version, we have made some changes.
 In the previous version, we used optimization routines from Salvus, but we have now stopped supporting them and created a basis for implementing our own optimization routines within Inversionson.
-This release includes two versions of the [Adam](https://arxiv.org/abs/1412.6980) optimization method. More details on that later.
-We plan on adding more optimization routines in the future, as we have built a basis to be able to do so relatively easily.
 
 Inversionson has built in support for using a validation dataset, which is a dataset that is not explicitly a part of the inversion but is reserved for monitoring the inversion procedure with an independent dataset.
 The validation dataset can be used to tune regularization for example. There is also support for reserving a test dataset to compute misfit for at the end of the inversion process.
