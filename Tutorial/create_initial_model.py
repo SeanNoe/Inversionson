@@ -3,7 +3,7 @@ import toml
 
 
 # Load in min period from LASIF config, this drives the resolution of the mesh
-with open('INVERSIONSON_PROJECT/LASIF_PROJECT/lasif_config.toml', 'r') as file:
+with open('LASIF_PROJECT/lasif_config.toml', 'r') as file:
     data = toml.load(file)
 
 period = data['simulation_settings']['minimum_period_in_s']
@@ -20,4 +20,4 @@ m.basic.elements_per_wavelength = 2.0
 mesh = m.create_mesh()
 
 # Save the mesh in the LASIF project
-mesh.write_h5('INVERSIONSON_PROJECT/LASIF_PROJECT/MODELS/initial_model.h5')
+mesh.write_h5('LASIF_PROJECT/MODELS/initial_model.h5')

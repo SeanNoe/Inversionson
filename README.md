@@ -247,9 +247,13 @@ This should be it.
 
 # Dummy Project
 
-This is a little tutorial to set up a dummy problem. Below, the configurations for Inversionson are described in detail. For reference, all the config-files and the script to create the simple starting model can be found in the `Tutorial`-folder. Just copy the files to their designated spot described below.
+This is a little tutorial to set up a dummy problem. The dummy problem encompasses a long period global inversion on the full data set. Below, the configurations for Inversionson are described in detail. For reference, all the config-files and the script to create the simple starting model can be found in the `Tutorial`-folder. Just copy the files to their designated spot described below. 
+
+During the steps, you will notice that the simulations themselves will run relatively fast to other tasts (pre-processing, post-processing, interpolations and smoothing).
 
 ### House keeping
+
+Create the Inversionson-Project folder. This is where we store all intermediate results and from where we execute the inversion on a terminal.
 
 ```
 mkdir INVERSIONSON_PROJECT
@@ -257,10 +261,14 @@ cd INVERSIONSON_PROJECT
 lasif init_project LASIF_PROJECT
 ```
 
+Get the data files from the remote machine. The full dataset is roughly 11 TB. Therefore, we only get the essential information to select Mini-Batches etc., while the receiver and waveform information is processed on the remote.
+
 ```
 # Copy the empty earthquake files to the local machine
 scp daint:'/project/s1238/snoe/empty_earthquakes/EARTHQUAKES/*.h5' LASIF_PROJECT/DATA/EARTHQUAKES/.
 ```
+
+Bathymetry and Topography are vital for correct waveform simulations. Get a copy of the files from the remote. To deal here with high-resolved data, therefore the files are ~2 GB each. Strictly, for the tutorial, not the best resolution is needed, so feel free to download any of the other files in the remote folder. 
 
 ```
 # Get a copy of the bathymetry and topography files
@@ -275,7 +283,7 @@ Configs to be adapted in the file `LASIF_PROJECT/lasif_config.toml`, everything 
 
 ```toml
 # Adapt min and max periods
-minimum_period_in_s = 130.0
+minimum_period_in_s = 160.0
 maximum_period_in_s = 200.0
 time_step_in_s = 0.1
 end_time_in_s = 3600.0
@@ -292,7 +300,7 @@ import toml
 
 
 # Load in min period from LASIF config, this drives the resolution of the mesh
-with open('INVERSIONSON_PROJECT/LASIF_PROJECT/lasif_config.toml', 'r') as file:
+with open('LASIF_PROJECT/lasif_config.toml', 'r') as file:
     data = toml.load(file)
 
 period = data['simulation_settings']['minimum_period_in_s']
@@ -309,7 +317,7 @@ m.basic.elements_per_wavelength = 2.0
 mesh = m.create_mesh()
 
 # Save the mesh in the LASIF project
-mesh.write_h5('INVERSIONSON_PROJECT/LASIF_PROJECT/MODELS/initial_model.h5')
+mesh.write_h5('LASIF_PROJECT/MODELS/initial_model.h5')
 ```
 
 Run THE MAGIC COMMAND of the automatic inversion tool: <br>

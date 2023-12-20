@@ -10,7 +10,7 @@ use_only_intersection = false
 
 [simulation_settings]
 comment = "This section controls both the way your data are processed and the input files to your numerical solver (i.e. how the source time function is processed). We currently only support bandpass_filtered_heaviside as a source time function."
-minimum_period_in_s = 130.0
+minimum_period_in_s = 160.0
 maximum_period_in_s = 200.0
 time_step_in_s = 0.1
 end_time_in_s = 3600.0
