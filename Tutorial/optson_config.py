@@ -49,7 +49,7 @@ def get_dynamic_mini_batch_opt(project: Project):
     )
     problem = Problem(project=project, smooth_gradients=True)
     st_upd = SteepestDescentUpdate(
-        initial_step_size=0.03, initial_step_as_percentage=True, verbose=True
+        initial_step_size=0.05, initial_step_as_percentage=True, verbose=True
     )
     update = BasicTRUpdate(fallback=st_upd, verbose=True)
     return Optimizer(
