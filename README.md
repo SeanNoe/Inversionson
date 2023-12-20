@@ -500,12 +500,12 @@ def get_dynamic_mini_batch_opt(project: Project):
 
 ### Start the inversion
 
-After everything is set up, all we need to do is to run the magic command again.
+After everything is set up, all we need to do is to run automization-line again.
 
 ```terminal
 python -m inversionson.autoinverter
 ```
 
-That's it. The inversion can be interrupted and restarted at any time EXCEPT when something is up- or downloading. However, most of the time the iteration listener is checking in on jobs or waits until it pings the remote again, there is no problem when interrupting it then. When you want to change any inputs in the inversion configurations, interrupt the inversion, change the file, and restart the process.
+That's it. The inversion can be interrupted and restarted at any time EXCEPT when something is up- or downloading. However, most of the time the iteration listener is checking in on jobs or waits until it pings the remote again, it is no problem to interrupt it then. When you want to change any inputs in the inversion configurations, interrupt the inversion, change the file, and restart the process with the magic command.
 
 
