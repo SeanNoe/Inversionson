@@ -500,7 +500,7 @@ def get_dynamic_mini_batch_opt(project: Project):
 
 ### Start the inversion
 
-After everything is set up, all we need to do is to run automization-line again.
+After everything is set up, all we need to do is to run this line again:
 
 ```terminal
 python -m inversionson.autoinverter
