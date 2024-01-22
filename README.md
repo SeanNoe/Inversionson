@@ -51,7 +51,7 @@ Run the mondaic downloader. Here, you need your software credentials. Autodetect
 
 ```
 # Run the Mondaic downloader
-bash -c "\$(curl -sSL https://get.mondaic.com)"
+bash -c "$(curl -sSL https://get.mondaic.com)"
 ```
 
 ```
