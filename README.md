@@ -144,8 +144,9 @@ Run `salvus-cli init-site daint` to check if the site has been installed success
 
 LASIF is mostly an organization tool with some handy api functions for global or regional tomographic problems. It has data downloading options, processing functions, waveform vizualisation tools, and is able to compute gradients.
 
-In the same environment, run 
+In the same environment, run
 ```
+conda install numpy=1.24.3
 git clone https://github.com/SeanNoe/LASIF_2.0.git
 cd LASIF_2.0
 git fetch
@@ -153,7 +154,7 @@ git checkout -t origin/dp/modify_source
 pip install -e .
 cd ..
 ```
-
+(The numpy version needs to be fixed for the LASIF api. `umath_tests` causes problems otherwise. This may only be a temporary solution.)
 ### MultiMesh installation
 
 This package manages the creation of event-adaptive meshes.
