@@ -195,9 +195,20 @@ class MultiMesh(Component):
             "elems_per_quarter": self.project.config.meshing.elements_per_azimuthal_quarter,
             "interpolation_weights": remote_weights_path,
             "elems_per_wavelength": self.project.config.meshing.elements_per_wavelength,
+            "refinement_theta_min": self.project.config.meshing.refinement_theta_min,
+            "refinement_theta_max": self.project.config.meshing.refinement_theta_max,
+            "refinement_r_min": self.project.config.meshing.refinement_r_min,
+            "double_refinement_theta_min": self.project.config.meshing.double_refinement_theta_min,
+            "double_refinement_theta_max": self.project.config.meshing.double_refinement_theta_max,
+            "double_refinement_r_min": self.project.config.meshing.double_refinement_r_min,
+            "inversionson_folder": self.project.config.hpc.inversionson_folder,
         }
         information["data_processing"] = not gradient
         information["multi-mesh"] = self.project.config.meshing.multi_mesh
+        information["multi-mesh-regional"] = self.project.config.meshing.multi_mesh_regional
+        information["manual-time-step"] = self.project.config.hpc.manual_time_step
+        #information["refinement"] = self.project.config.meshing.refinement
+        #information["double_refinement"] = self.project.config.meshing.double_refinement
         # Provide information for cut and clipping
         if gradient:
             information[

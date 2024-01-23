@@ -1,10 +1,10 @@
-import multi_mesh.api
 import sys
 import toml
 import os
 import shutil
 import pathlib
 import h5py
+import numpy as np
 from inversionson.hpc_processing.utils import build_or_get_receiver_info
 from inversionson.hpc_processing.cut_and_clip import (
     cut_source_region_from_gradient,
@@ -73,30 +73,130 @@ def create_mesh(mesh_info, source_info):
         return
     else:
         from salvus.mesh.simple_mesh import SmoothieSEM
+        from salvus.mesh.unstructured_mesh import UnstructuredMesh
+        from salvus.mesh.mask_generators import SurfaceMaskGenerator
 
-        sm = SmoothieSEM()
-        sm.basic.model = "prem_ani_one_crust"
-        sm.basic.min_period_in_seconds = float(mesh_info["min_period"])
-        sm.basic.elements_per_wavelength = float(mesh_info["elems_per_wavelength"])
-        sm.basic.number_of_lateral_elements = int(mesh_info["elems_per_quarter"])
-        sm.advanced.tensor_order = 4
-        if "ellipticity" in mesh_info.keys():
-            sm.spherical.ellipticity = float(mesh_info["ellipticity"])
-        if "ocean_loading" in mesh_info.keys():
-            sm.ocean.bathymetry_file = mesh_info["ocean_loading"]["remote_path"]
-            sm.ocean.bathymetry_varname = mesh_info["ocean_loading"]["variable"]
-            sm.ocean.ocean_layer_style = "loading"
-            sm.ocean.ocean_layer_density = 1025.0
-        if "topography" in mesh_info.keys():
-            sm.topography.topography_file = mesh_info["topography"]["remote_path"]
-            sm.topography.topography_varname = mesh_info["topography"]["variable"]
-        sm.source.latitude = float(source_info["latitude"])
-        sm.source.longitude = float(source_info["longitude"])
-        sm.refinement.lateral_refinements.append(
-            {"theta_min": 40.0, "theta_max": 140.0, "r_min": 6250.0}
-        )
-        m = sm.create_mesh()
-        m.write_h5("to_mesh.h5", mode="all")
+        if info["multi-mesh-regional"]: #Regional-Mode
+            sm = SmoothieSEM()
+            sm.basic.model = "prem_ani_one_crust"
+            sm.basic.min_period_in_seconds = float(mesh_info["min_period"])
+            sm.basic.elements_per_wavelength = float(mesh_info["elems_per_wavelength"])
+            sm.basic.number_of_lateral_elements = int(mesh_info["elems_per_quarter"])
+            sm.advanced.tensor_order = 2
+            if "ellipticity" in mesh_info.keys():
+                sm.spherical.ellipticity = float(mesh_info["ellipticity"])
+            if "ocean_loading" in mesh_info.keys():
+                sm.ocean.bathymetry_file = mesh_info["ocean_loading"]["remote_path"]
+                sm.ocean.bathymetry_varname = mesh_info["ocean_loading"]["variable"]
+                sm.ocean.ocean_layer_style = "loading"
+                sm.ocean.ocean_layer_density = 1025.0
+            if "topography" in mesh_info.keys():
+                sm.topography.topography_file = mesh_info["topography"]["remote_path"]
+                sm.topography.topography_varname = mesh_info["topography"]["variable"]
+            sm.source.latitude = float(source_info["latitude"])
+            sm.source.longitude = float(source_info["longitude"])
+            sm.spherical.min_radius = 3700
+            sm.chunk.max_colatitude = 180
+            if "refinement" in mesh_info.keys():
+                sm.refinement.lateral_refinements.append(
+                    {"theta_min": float(mesh_info["refinement_theta_min"]), 
+                    "theta_max": float(mesh_info["refinement_theta_max"]), 
+                    "r_min": float(mesh_info["refinement_r_min"])}
+                )
+            if "double_refinement" in mesh_info.keys():
+                sm.refinement.lateral_refinements.append(
+                    {"theta_min": float(mesh_info["double_refinement_theta_min"]), 
+                    "theta_max": float(mesh_info["double_refinement_theta_max"]), 
+                    "r_min": float(mesh_info["double_refinement_r_min"])}
+                )
+            m = sm.create_mesh()
+            print("Current number of elements before cutting", m.nelem)
+
+            #cut regional SmoothieSEM mesh according to master mesh
+
+            master_mesh = UnstructuredMesh.from_h5("./from_mesh.h5")
+            pts_domain = master_mesh.get_element_centroid()
+            pts_sm = m.get_element_centroid()
+            mean_domain = np.mean(pts_domain, axis=0)
+
+            side_set_coords = None
+            for ss in master_mesh.side_sets.keys():
+                if side_set_coords is None:
+                    side_set_coords = pts_domain[master_mesh.side_sets[ss][0]]
+                    continue
+                side_set_coords = np.concatenate((side_set_coords, pts_domain[master_mesh.side_sets[ss][0]]),axis=0)
+
+            d = np.max(np.linalg.norm(side_set_coords - mean_domain, axis=1))
+
+            dist = np.linalg.norm(pts_sm - mean_domain, axis=1)
+            mask = dist < d
+            coarse_cut = m.apply_element_mask(mask)
+
+            pts_sm = coarse_cut.get_element_centroid()
+
+            min_radius = np.min(np.linalg.norm(master_mesh.points,axis=1))
+            mask = np.linalg.norm(pts_sm,axis=1) > min_radius - master_mesh._hmax().max()
+
+            cutmesh = coarse_cut.apply_element_mask(mask)
+            cutmesh.find_surface('exterior')
+
+            #collect source-receiver coordinates for SurfaceMasking
+            src = []
+            src.append((source_info["latitude"], source_info["longitude"]))
+            for rec in receiver_info:
+                src.append((rec['latitude'], rec['longitude']))
+
+            smg = SurfaceMaskGenerator(
+                np.array(src),
+                number_of_points = 10000,
+                distance_in_km = 1700,
+            )
+            cutmesh_smg = smg.apply_mask(cutmesh)
+            cutmesh_smg.find_surface('surface')
+            cutmesh_smg.find_surface('inner_boundary')
+
+            #apply Absorbing Boundaries for later attachment
+            cutmesh_smg.side_sets['surface'] = (
+                cutmesh_smg.side_sets['surface'][0][~np.in1d(cutmesh_smg.side_sets['surface'][0], cutmesh_smg.side_sets['r1'][0])],
+                cutmesh_smg.side_sets['surface'][1][~np.in1d(cutmesh_smg.side_sets['surface'][0], cutmesh_smg.side_sets['r1'][0])])
+            cutmesh_smg.side_sets['inner_boundary'] = cutmesh_smg.side_sets['surface']
+            print("Final number of elements of SmoothieSEM after cutting", cutmesh_smg.nelem)
+            
+            cutmesh_smg.write_h5("to_mesh.h5", mode="all")
+
+        else: #Global-Mode 
+            sm = SmoothieSEM()
+            sm.basic.model = "prem_ani_one_crust"
+            sm.basic.min_period_in_seconds = float(mesh_info["min_period"])
+            sm.basic.elements_per_wavelength = float(mesh_info["elems_per_wavelength"])
+            sm.basic.number_of_lateral_elements = int(mesh_info["elems_per_quarter"])
+            sm.advanced.tensor_order = 4
+            if "ellipticity" in mesh_info.keys():
+                sm.spherical.ellipticity = float(mesh_info["ellipticity"])
+            if "ocean_loading" in mesh_info.keys():
+                sm.ocean.bathymetry_file = mesh_info["ocean_loading"]["remote_path"]
+                sm.ocean.bathymetry_varname = mesh_info["ocean_loading"]["variable"]
+                sm.ocean.ocean_layer_style = "loading"
+                sm.ocean.ocean_layer_density = 1025.0
+            if "topography" in mesh_info.keys():
+                sm.topography.topography_file = mesh_info["topography"]["remote_path"]
+                sm.topography.topography_varname = mesh_info["topography"]["variable"]
+            sm.source.latitude = float(source_info["latitude"])
+            sm.source.longitude = float(source_info["longitude"])
+            if "refinement" in mesh_info.keys():
+                sm.refinement.lateral_refinements.append(
+                    {"theta_min": float(mesh_info["refinement_theta_min"]), 
+                    "theta_max": float(mesh_info["refinement_theta_max"]), 
+                    "r_min": float(mesh_info["refinement_r_min"])}
+                )
+            if "double_refinement" in mesh_info.keys():
+                sm.refinement.lateral_refinements.append(
+                    {"theta_min": float(mesh_info["double_refinement_theta_min"]), 
+                    "theta_max": float(mesh_info["double_refinement_theta_max"]), 
+                    "r_min": float(mesh_info["double_refinement_r_min"])}
+                )
+            m = sm.create_mesh()
+            m.write_h5("to_mesh.h5", mode="all")
 
 
 def get_standard_gradient(mesh_info):
@@ -112,17 +212,25 @@ def move_mesh(mesh_path):
         shutil.copy("./output/mesh.h5", mesh_location)
 
 
-def interpolate_fields(from_mesh, to_mesh, layers, parameters, stored_array=None):
-    multi_mesh.api.gll_2_gll_layered_multi_two(
-        from_gll=from_mesh,
-        to_gll=to_mesh,
-        nelem_to_search=30,
-        parameters=parameters,
-        layers="nocore",
-        stored_array=stored_array,
-        make_spherical=True,
-    )
+def interpolate_fields(from_mesh, to_mesh):
+    from salvus.mesh.tools.transforms import interpolate_mesh_to_mesh
+    #mapi.gll_2_gll_layered_multi_two(
+    #    from_gll=from_mesh,
+    #    to_gll=to_mesh,
+    #    nelem_to_search=30,
+    #    parameters=parameters,
+    #    layers=layers,
+    #    stored_array=stored_array,
+    #    make_spherical=True,
+    #)
 
+    mesh = interpolate_mesh_to_mesh(
+        mesh_0 = from_mesh,
+        mesh_1 = to_mesh,
+        use_layers = True,
+        use_1d_vertical_coordinate = False,
+    )
+    return mesh
 
 def move_nodal_field_to_gradient(mesh_info, field):
     """
@@ -140,7 +248,7 @@ def move_nodal_field_to_gradient(mesh_info, field):
 
 
 def create_simulation_object(
-    mesh_info, source_info, receiver_info, simulation_info, multi_mesh
+    mesh_info, source_info, receiver_info, simulation_info, multi_mesh, time_step
 ):
     """
     Create the simulation object remotely and write it into a dictionary toml file.
@@ -191,7 +299,8 @@ def create_simulation_object(
 
     w.physics.wave_equation.end_time_in_seconds = simulation_info["end_time"]
     # We don't set the time step anymore
-    # w.physics.wave_equation.time_step_in_seconds = simulation_info["time_step"]
+    if time_step:
+        w.physics.wave_equation.time_step_in_seconds = simulation_info["time_step"]
     w.physics.wave_equation.start_time_in_seconds = simulation_info["start_time"]
     w.physics.wave_equation.attenuation = simulation_info["attenuation"]
     w.physics.wave_equation.courant_number = 0.45
@@ -282,13 +391,28 @@ if __name__ == "__main__":
         os.makedirs(mesh_info["interpolation_weights"])
 
     if info["multi-mesh"]:
-        interpolate_fields(
-            from_mesh="./from_mesh.h5",
-            to_mesh="./to_mesh.h5",
-            layers="nocore",
-            parameters=["VPV", "VPH", "VSV", "VSH", "RHO"],
-            stored_array=mesh_info["interpolation_weights"],
+        from salvus.mesh.unstructured_mesh import UnstructuredMesh
+        interpolated_mesh = interpolate_fields(
+            from_mesh= UnstructuredMesh.from_h5("./from_mesh.h5"),
+            to_mesh= UnstructuredMesh.from_h5("./to_mesh.h5"),            
         )
+        interpolated_mesh.write_h5("./to_mesh.h5")
+        #if info["multi-mesh-regional"]:
+        #    interpolate_fields(
+        #        from_mesh="./from_mesh.h5",
+        #        to_mesh="./to_mesh.h5",
+        #        layers="all",
+        #        parameters=["VPV", "VPH", "VSV", "VSH", "RHO"],
+        #        stored_array=mesh_info["interpolation_weights"],
+        #    )
+        #else:
+        #    interpolate_fields(
+        #        from_mesh="./from_mesh.h5",
+        #        to_mesh="./to_mesh.h5",
+        #        layers="nocore",
+        #        parameters=["VPV", "VPH", "VSV", "VSH", "RHO"],
+        #        stored_array=mesh_info["interpolation_weights"],
+        #    )
         print("Fields interpolated")
 
     # Also clip the gradient here. We prefer not to use the login node anymore
@@ -302,6 +426,17 @@ if __name__ == "__main__":
             info["clipping_percentile"],
         )
     if info["multi-mesh"]:
+        if info["multi-mesh-regional"]:
+            from salvus.mesh.unstructured_mesh import UnstructuredMesh
+            mesh = UnstructuredMesh.from_h5("./to_mesh.h5")
+            mesh.find_surface('surface')
+            mesh.find_surface('inner_boundary')
+            mesh.side_sets['surface'] = (
+                mesh.side_sets['surface'][0][~np.in1d(mesh.side_sets['surface'][0], mesh.side_sets['r1'][0])],
+                mesh.side_sets['surface'][1][~np.in1d(mesh.side_sets['surface'][0], mesh.side_sets['r1'][0])])
+            mesh.side_sets['inner_boundary'] = mesh.side_sets['surface']
+            mesh.write_h5("./to_mesh.h5")
+
         shutil.move("./to_mesh.h5", "./output/mesh.h5")
     if not info["gradient"]:
         if info["multi-mesh"]:
@@ -315,4 +450,5 @@ if __name__ == "__main__":
                 receiver_info,
                 simulation_info,
                 info["multi-mesh"],
+                info["manual-time-step"],
             )
