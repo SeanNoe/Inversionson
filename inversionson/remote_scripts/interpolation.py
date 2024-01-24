@@ -1,3 +1,4 @@
+import multi_mesh.api
 import sys
 import toml
 import os
@@ -212,25 +213,25 @@ def move_mesh(mesh_path):
         shutil.copy("./output/mesh.h5", mesh_location)
 
 
-def interpolate_fields(from_mesh, to_mesh):
+def interpolate_fields(from_mesh, to_mesh, parameters, layers, stored_array = None):
     from salvus.mesh.tools.transforms import interpolate_mesh_to_mesh
-    #mapi.gll_2_gll_layered_multi_two(
-    #    from_gll=from_mesh,
-    #    to_gll=to_mesh,
-    #    nelem_to_search=30,
-    #    parameters=parameters,
-    #    layers=layers,
-    #    stored_array=stored_array,
-    #    make_spherical=True,
-    #)
-
-    mesh = interpolate_mesh_to_mesh(
-        mesh_0 = from_mesh,
-        mesh_1 = to_mesh,
-        use_layers = True,
-        use_1d_vertical_coordinate = False,
+    multi_mesh.api.gll_2_gll_layered_multi_two(
+        from_gll=from_mesh,
+        to_gll=to_mesh,
+        nelem_to_search=30,
+        parameters=parameters,
+        layers=layers,
+        stored_array=stored_array,
+        make_spherical=True,
     )
-    return mesh
+
+    #mesh = interpolate_mesh_to_mesh(
+    #    mesh_0 = from_mesh,
+    #    mesh_1 = to_mesh,
+    #    use_layers = True,
+    #    use_1d_vertical_coordinate = False,
+    #)
+    #return mesh
 
 def move_nodal_field_to_gradient(mesh_info, field):
     """
@@ -298,8 +299,8 @@ def create_simulation_object(
     w.add_receivers(receivers, max_iterations=100000)
 
     w.physics.wave_equation.end_time_in_seconds = simulation_info["end_time"]
-    # We don't set the time step anymore
-    if time_step:
+    # We don't set the time step anymore. BUT NOW WE DO (if you want)
+    if info["manual-time-step"]:
         w.physics.wave_equation.time_step_in_seconds = simulation_info["time_step"]
     w.physics.wave_equation.start_time_in_seconds = simulation_info["start_time"]
     w.physics.wave_equation.attenuation = simulation_info["attenuation"]
@@ -391,28 +392,28 @@ if __name__ == "__main__":
         os.makedirs(mesh_info["interpolation_weights"])
 
     if info["multi-mesh"]:
-        from salvus.mesh.unstructured_mesh import UnstructuredMesh
-        interpolated_mesh = interpolate_fields(
-            from_mesh= UnstructuredMesh.from_h5("./from_mesh.h5"),
-            to_mesh= UnstructuredMesh.from_h5("./to_mesh.h5"),            
-        )
-        interpolated_mesh.write_h5("./to_mesh.h5")
-        #if info["multi-mesh-regional"]:
-        #    interpolate_fields(
-        #        from_mesh="./from_mesh.h5",
-        #        to_mesh="./to_mesh.h5",
-        #        layers="all",
-        #        parameters=["VPV", "VPH", "VSV", "VSH", "RHO"],
-        #        stored_array=mesh_info["interpolation_weights"],
-        #    )
-        #else:
-        #    interpolate_fields(
-        #        from_mesh="./from_mesh.h5",
-        #        to_mesh="./to_mesh.h5",
-        #        layers="nocore",
-        #        parameters=["VPV", "VPH", "VSV", "VSH", "RHO"],
-        #        stored_array=mesh_info["interpolation_weights"],
-        #    )
+        #from salvus.mesh.unstructured_mesh import UnstructuredMesh
+        #interpolated_mesh = interpolate_fields(
+        #    from_mesh= UnstructuredMesh.from_h5("./from_mesh.h5"),
+        #    to_mesh= UnstructuredMesh.from_h5("./to_mesh.h5"),            
+        #)
+        #interpolated_mesh.write_h5("./to_mesh.h5")
+        if info["multi-mesh-regional"]:
+            interpolate_fields(
+                from_mesh="./from_mesh.h5",
+                to_mesh="./to_mesh.h5",
+                layers="all",
+                parameters=["VPV", "VPH", "VSV", "VSH", "RHO"],
+                stored_array=mesh_info["interpolation_weights"],
+            )
+        else:
+            interpolate_fields(
+                from_mesh="./from_mesh.h5",
+                to_mesh="./to_mesh.h5",
+                layers="nocore",
+                parameters=["VPV", "VPH", "VSV", "VSH", "RHO"],
+                stored_array=mesh_info["interpolation_weights"],
+            )
         print("Fields interpolated")
 
     # Also clip the gradient here. We prefer not to use the login node anymore
