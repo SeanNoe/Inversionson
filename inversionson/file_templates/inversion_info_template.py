@@ -12,8 +12,8 @@ class MonitoringConfig:
 @dataclass(frozen=True)
 class MeshingConfig:
     # Use multi-mesh True or False
-    multi_mesh: bool = True  # For global-scale multi-mesh only leave the first flag on True
-    multi_mesh_regional: bool = True  # For regional-scale projects set both to True
+    multi_mesh: bool = True  # For global-scale multi-mesh only leave the "multi_mesh" flag on True
+    multi_mesh_regional: bool = True  # For regional-scale projects set "multi_mesh_regional" addtionally to True
 
     # The below is only relevant for SmoothieSEM meshes
     elements_per_azimuthal_quarter: int = 4
@@ -70,13 +70,13 @@ class HPCSettings:
     # Interpolation settings
     grad_interp_wall_time: float = 3600.0
     model_interp_wall_time: float = 3600.0
+    interpolate_with_core: bool = False # set flag if the Earth's core should be included in simulations
 
     # Output Processing settings
     proc_wall_time: float = 3600
 
     # Time Step settings
-    manual_time_step: bool = False
-    # set time step in LASIF Folder
+    manual_time_step: bool = False # set time step in LASIF Folder
 
 @dataclass(frozen=True)
 class InversionSettings:

@@ -398,11 +398,11 @@ if __name__ == "__main__":
         #    to_mesh= UnstructuredMesh.from_h5("./to_mesh.h5"),            
         #)
         #interpolated_mesh.write_h5("./to_mesh.h5")
-        if info["multi-mesh-regional"]:
+        if mesh_info["nocore"]:
             interpolate_fields(
                 from_mesh="./from_mesh.h5",
                 to_mesh="./to_mesh.h5",
-                layers="all",
+                layers="nocore",
                 parameters=["VPV", "VPH", "VSV", "VSH", "RHO"],
                 stored_array=mesh_info["interpolation_weights"],
             )
@@ -410,7 +410,7 @@ if __name__ == "__main__":
             interpolate_fields(
                 from_mesh="./from_mesh.h5",
                 to_mesh="./to_mesh.h5",
-                layers="nocore",
+                layers="all",
                 parameters=["VPV", "VPH", "VSV", "VSH", "RHO"],
                 stored_array=mesh_info["interpolation_weights"],
             )
