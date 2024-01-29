@@ -5,7 +5,6 @@ import os
 import shutil
 import pathlib
 import h5py
-import numpy as np
 from inversionson.hpc_processing.utils import build_or_get_receiver_info
 from inversionson.hpc_processing.cut_and_clip import (
     cut_source_region_from_gradient,
@@ -76,6 +75,7 @@ def create_mesh(mesh_info, source_info):
         from salvus.mesh.simple_mesh import SmoothieSEM
         from salvus.mesh.unstructured_mesh import UnstructuredMesh
         from salvus.mesh.mask_generators import SurfaceMaskGenerator
+        import numpy as np
 
         if info["multi-mesh-regional"]: #Regional-Mode
             sm = SmoothieSEM()
@@ -214,7 +214,7 @@ def move_mesh(mesh_path):
 
 
 def interpolate_fields(from_mesh, to_mesh, parameters, layers, stored_array = None):
-    from salvus.mesh.tools.transforms import interpolate_mesh_to_mesh
+    #from salvus.mesh.tools.transforms import interpolate_mesh_to_mesh
     multi_mesh.api.gll_2_gll_layered_multi_two(
         from_gll=from_mesh,
         to_gll=to_mesh,
