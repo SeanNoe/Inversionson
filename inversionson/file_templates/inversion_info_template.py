@@ -70,7 +70,7 @@ class HPCSettings:
     # Interpolation settings
     grad_interp_wall_time: float = 3600.0
     model_interp_wall_time: float = 3600.0
-    interpolate_with_core: bool = False # set flag if the Earth's core should be included in simulations
+    interpolate_without_core: bool = False # set flag if the Earth's core should be included in simulations
 
     # Output Processing settings
     proc_wall_time: float = 3600

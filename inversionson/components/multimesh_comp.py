@@ -202,7 +202,7 @@ class MultiMesh(Component):
             "double_refinement_theta_max": self.project.config.meshing.double_refinement_theta_max,
             "double_refinement_r_min": self.project.config.meshing.double_refinement_r_min,
             "inversionson_folder": self.project.config.hpc.inversionson_folder,
-            "nocore" : self.project.config.hpc.interpolate_with_core,
+            "nocore" : self.project.config.hpc.interpolate_without_core,
         }
         information["data_processing"] = not gradient
         information["multi-mesh"] = self.project.config.meshing.multi_mesh
