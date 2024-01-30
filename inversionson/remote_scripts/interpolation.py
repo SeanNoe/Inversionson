@@ -5,6 +5,7 @@ import os
 import shutil
 import pathlib
 import h5py
+import numpy as np
 from inversionson.hpc_processing.utils import build_or_get_receiver_info
 from inversionson.hpc_processing.cut_and_clip import (
     cut_source_region_from_gradient,
@@ -75,7 +76,6 @@ def create_mesh(mesh_info, source_info):
         from salvus.mesh.simple_mesh import SmoothieSEM
         from salvus.mesh.unstructured_mesh import UnstructuredMesh
         from salvus.mesh.mask_generators import SurfaceMaskGenerator
-        import numpy as np
 
         if info["multi-mesh-regional"]: #Regional-Mode
             sm = SmoothieSEM()
