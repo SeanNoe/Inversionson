@@ -51,7 +51,7 @@ def source_time_function(npts, delta, freqmin=None, freqmax=None):
             "bandpass",
             freqmin=freqmin,
             freqmax=freqmax,
-            corners=3,
+            corners=8,
             zerophase=False,
         )
         tr.detrend("linear")
@@ -61,7 +61,7 @@ def source_time_function(npts, delta, freqmin=None, freqmax=None):
             "bandpass",
             freqmin=freqmin,
             freqmax=freqmax,
-            corners=3,
+            corners=8,
             zerophase=False,
         )
 

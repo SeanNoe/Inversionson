@@ -311,11 +311,18 @@ def create_simulation_object(
     if simulation_info["absorbing_boundaries"]:
         print("I think there are absorbing boundaries")
         bound = True
-        absorbing = sc.boundary.Absorbing(
-            width_in_meters=simulation_info["absorbing_boundary_length"],
-            side_sets=simulation_info["side_sets"],
-            taper_amplitude=1.0 / simulation_info["minimum_period"],
-        )
+        if info["multi-mesh"]:
+            absorbing = sc.boundary.Absorbing(
+                width_in_meters=simulation_info["absorbing_boundary_length"],
+                side_sets=simulation_info["side_sets"],
+                taper_amplitude=1.0 / simulation_info["minimum_period"],
+            )
+        else:
+            absorbing = sc.boundary.Absorbing(
+                width_in_meters=simulation_info["absorbing_boundary_length"],
+                side_sets=["inner_boundary"],
+                taper_amplitude=1.0 / simulation_info["minimum_period"],
+            )
         boundaries.append(absorbing)
 
     if "ocean_loading" in mesh_info.keys():
@@ -431,11 +438,12 @@ if __name__ == "__main__":
             from salvus.mesh.unstructured_mesh import UnstructuredMesh
             mesh = UnstructuredMesh.from_h5("./to_mesh.h5")
             mesh.find_surface('surface')
-            mesh.find_surface('inner_boundary')
+            #mesh.find_surface('inner_boundary')
             mesh.side_sets['surface'] = (
                 mesh.side_sets['surface'][0][~np.in1d(mesh.side_sets['surface'][0], mesh.side_sets['r1'][0])],
                 mesh.side_sets['surface'][1][~np.in1d(mesh.side_sets['surface'][0], mesh.side_sets['r1'][0])])
-            mesh.side_sets['inner_boundary'] = mesh.side_sets['surface']
+           #mesh.side_sets['inner_boundary'] = mesh.side_sets['surface']
+            #mesh.side_sets.pop('inner_boundary')
             mesh.write_h5("./to_mesh.h5")
 
         shutil.move("./to_mesh.h5", "./output/mesh.h5")

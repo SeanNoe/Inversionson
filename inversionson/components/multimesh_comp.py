@@ -302,9 +302,9 @@ class MultiMesh(Component):
 
         if self.project.config.inversion.absorbing_boundaries:
             side_sets = (
-                ["inner_boundary"]
-                if (
-                    "inner_boundary"
+                ["surface"]
+                if ( 
+                    "surface"
                     in self.project.lasif.lasif_comm.project.domain.get_side_set_names()
                 )
                 else [

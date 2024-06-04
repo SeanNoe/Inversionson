@@ -253,7 +253,7 @@ def select_windows(
     min_cc=0.10,
     max_noise=0.10,
     max_noise_window=0.4,
-    min_velocity=2.4,
+    min_velocity=1.5,
     threshold_shift=0.30,
     threshold_correlation=0.75,
     min_length_period=1.5,
