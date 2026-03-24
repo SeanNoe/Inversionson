@@ -28,6 +28,7 @@ class RemotePaths:
         self.gradient_proc_dir = self.root / "GRADIENT_PROCESSING"
         self.script_dir = self.root / "SCRIPTS"
         self.proc_data_dir = self.root / "PROCESSED_DATA"
+        self.rayplots_dir = self.root / "RAYPLOTS"
 
         # Remote files
         self.ocean_loading_f = self.root / "ocean_loading_file"
@@ -77,6 +78,7 @@ class RemotePaths:
             self.gradient_proc_dir,
             self.script_dir,
             self.proc_data_dir,
+            self.rayplots_dir,
         ]
 
         for directory in all_directories:
@@ -98,6 +100,7 @@ class ProjectPaths:
         self.diff_model_dir = self.root / "DIFFUSION_MODELS"
         self.optson_config = self.root / "optson_config.py"
         self.opt_dir = self.root / "OPTIMIZATION"
+        self.plot_dir = self.root/ "PLOTTING"
         self.optson_state_file = self.opt_dir / "state_file.h5"
         self.gradient_dir = self.opt_dir / "GRADIENTS"
         self.smoothed_gradient_dir = self.opt_dir / "SMOOTHED_GRADIENTS"
@@ -121,6 +124,7 @@ class ProjectPaths:
             self.reg_dir,
             self.gradient_norm_dir,
             self.model_dir,
+            self.plot_dir,
         ]
         for directory in all_directories:
             if not directory.is_dir():
@@ -210,6 +214,7 @@ class Project(object):
         from .components.mesh_comp import Mesh
         from .components.storyteller import StoryTeller
         from .components.smooth_comp import Smoother
+        from .components.plotting_comp import Plotter
         from .components.event_db import EventDataBase
 
         # Project acts as a communicator that contains a bunch of components.
@@ -219,6 +224,7 @@ class Project(object):
         self.mesh = Mesh(project=self)
         self.storyteller = StoryTeller(project=self)
         self.smoother = Smoother(project=self)
+        self.plotter = Plotter(project=self)
         self.event_db = EventDataBase(project=self)
 
     def print(

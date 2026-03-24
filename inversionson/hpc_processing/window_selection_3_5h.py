@@ -253,17 +253,15 @@ def select_windows(
     min_cc=0.1,
     max_noise=0.10,
     max_noise_window=0.4,
-    min_velocity=0.3,
+    min_velocity=0.001,
     threshold_shift=0.35,
     threshold_correlation=0.65,
-    min_length_period=2.0,
+    min_length_period=2.4,
     min_peaks_troughs=2,
     max_energy_ratio=10.0,
     min_envelope_similarity=0.2,
     max_amplitude_window_ratio=0.1,
-    min_surface_window_length = 4.0,
-    surface_window_extension = 150.0,
-    global_inversion=True,
+    global_inversion=False,
     window_everything=False,
     verbose=False,
     plot=False,
@@ -387,7 +385,6 @@ def select_windows(
     # =========================================================================
 
     # Overall Correlation coefficient.
-    #print(type(data), type(synth))
     norm = np.sqrt(np.sum(data**2)) * np.sqrt(np.sum(synth**2))
     cc = np.sum(data * synth) / norm
     if verbose:
@@ -522,33 +519,33 @@ def select_windows(
         plt.xlim(*xlim)
 
         offset = (xlim[1] - xlim[0]) * 0.005
-        #plt.vlines(first_tt_arrival, ylim[0], ylim[1], colors="#ff7f00", lw=2)
-        #plt.text(
-        #    first_tt_arrival + offset,
-        #    ylim[1] - (ylim[1] - ylim[0]) * 0.02,
-        #    "first arrival",
-        #    verticalalignment="top",
-        #    horizontalalignment="left",
-        #    color="#ee6e00",
-        #    path_effects=[PathEffects.withStroke(linewidth=3, foreground="white")],
-        #)
+        plt.vlines(first_tt_arrival, ylim[0], ylim[1], colors="#ff7f00", lw=2)
+        plt.text(
+            first_tt_arrival + offset,
+            ylim[1] - (ylim[1] - ylim[0]) * 0.02,
+            "first arrival",
+            verticalalignment="top",
+            horizontalalignment="left",
+            color="#ee6e00",
+            path_effects=[PathEffects.withStroke(linewidth=3, foreground="white")],
+        )
 
-        #plt.vlines(
-        #    first_tt_arrival - minimum_period / 2.0,
-        #    ylim[0],
-        #    ylim[1],
-        #    colors="#ff7f00",
-        #    lw=2,
-        #)
-        #plt.text(
-        #    first_tt_arrival - minimum_period / 2.0 - offset,
-        #    ylim[0] + (ylim[1] - ylim[0]) * 0.02,
-        #    "first arrival - min period / 2",
-        #    verticalalignment="bottom",
-        #    horizontalalignment="right",
-        #    color="#ee6e00",
-        #    path_effects=[PathEffects.withStroke(linewidth=3, foreground="white")],
-        #)
+        plt.vlines(
+            first_tt_arrival - minimum_period / 2.0,
+            ylim[0],
+            ylim[1],
+            colors="#ff7f00",
+            lw=2,
+        )
+        plt.text(
+            first_tt_arrival - minimum_period / 2.0 - offset,
+            ylim[0] + (ylim[1] - ylim[0]) * 0.02,
+            "first arrival - min period / 2",
+            verticalalignment="bottom",
+            horizontalalignment="right",
+            color="#ee6e00",
+            path_effects=[PathEffects.withStroke(linewidth=3, foreground="white")],
+        )
 
         for velocity in [6, 5, 4, 3, min_velocity]:
             tt = dist_in_km / velocity
@@ -992,21 +989,12 @@ def select_windows(
     # Second minimum window length elimination stage.
     if plot:
         old_time_windows = time_windows.copy()
-    #min_length = minimum_period / dt * min_length_period
     min_length = min(minimum_period / dt * min_length_period, maximum_period / dt)
-    #min_length = min(minimum_period / dt * 4.0, maximum_period / dt)
-    #min_length_bw = min(minimum_period / dt * min_length_period, maximum_period / dt)
-    min_length_sw = minimum_period / dt * min_surface_window_length
-    tt_sw = (dist_in_km / 4.0) / dt
-    #print(tt_sw)
     for i in flatnotmasked_contiguous(time_windows):
         # Step 7: Throw away all windows with a length of less then
         # min_length_period the dominant period.
         if (i.stop - i.start) < min_length:
             time_windows.mask[i.start : i.stop] = True
-        if i.start > tt_sw:
-            if (i.stop - i.start) < min_length_sw:
-                time_windows.mask[i.start : i.stop] = True
     if plot:
         plt.subplot2grid(grid, (29, 0), rowspan=1)
         _plot_mask(
@@ -1017,7 +1005,6 @@ def select_windows(
 
     # Final step, eliminating windows with little energy.
     final_windows = []
-    extra_t = surface_window_extension / dt
     for j in flatnotmasked_contiguous(time_windows):
         # Again assert a certain minimal length.
         if (j.stop - j.start) < min_length:
@@ -1045,12 +1032,7 @@ def select_windows(
             )
         if np.max(data[j.start : j.stop])/np.max(data) < max_amplitude_window_ratio:
                 continue
-        #print(j.start, j.stop)
-        if j.start > tt_sw:
-            final_windows.append((int(j.start), int(j.stop + extra_t)))
-            #print("tt_sw", j.start - extra_t, j.stop + extra_t)
-        else:
-            final_windows.append((j.start, j.stop))
+        final_windows.append((j.start, j.stop))
 
     # Added step (Carl), amplitude threshold. Take out windows under a certain percentage of the max amplitude of the trace
 

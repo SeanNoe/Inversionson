@@ -39,7 +39,7 @@ class RegularizationHelper(object):
         :type iteration_name: str
         """
         self.project = project
-        self.site_name = self.project.config.hpc.sitename
+        self.site_name = self.project.config.hpc.sitename_smoothing
         self.iteration_name = iteration_name
         self.job_toml = (
             self.project.paths.reg_dir / f"regularization_{iteration_name}.toml"
@@ -117,7 +117,7 @@ class RegularizationHelper(object):
 
                 job = sapi.run_many_async(
                     input_files=sims,
-                    site_name=self.project.config.hpc.sitename,
+                    site_name=self.project.config.hpc.sitename_smoothing,
                     ranks_per_job=self.project.config.hpc.n_diff_ranks,
                     wall_time_in_seconds_per_job=self.project.config.hpc.diff_wall_time,
                 )

@@ -354,6 +354,12 @@ def run(info):
     # Generate task list
     with pyasdf.ASDFDataSet(processed_filename, mode="r", mpi=False) as ds:
         task_list = ds.waveforms.list()
+    with pyasdf.ASDFDataSet(processed_filename, mode="r", mpi=False) as ds:
+        for sta in task_list:
+            if ds.waveforms[sta].get_waveform_tags() != []:
+                dummy_station = sta
+                dummy_tag = ds.waveforms[sta].get_waveform_tags()[0] 
+                break
 
     if len(task_list) < 1:
         raise Exception("No processed data found.")
@@ -515,12 +521,23 @@ def run(info):
 
     # Only loop over stations with windows.
     task_list = sta_with_windows
+    forced = False
 
     # Use at most num_processes
     number_processes = min(num_processes, len(task_list))
 
     if not task_list:
-        raise Exception("At least one window is needed to compute" "an adjoint source.")
+        print("forcing window due to zero picked windows")
+        ds = pyasdf.ASDFDataSet(processed_filename, mode="r", mpi=False)
+        data_starttime = ds.waveforms[dummy_station][dummy_tag][0].stats.starttime
+        start = data_starttime
+        stop = data_starttime + 10 * ds.waveforms[dummy_station][dummy_tag][0].stats.delta
+        task_list = [dummy_station]
+        all_windows = {dummy_station: {dummy_station+"..BHN": [(start.timestamp, stop.timestamp, 0.1)],
+                                      dummy_station+"..BHZ": [(start.timestamp, stop.timestamp, 0.1)],
+                                      dummy_station+"..BHE": [(start.timestamp, stop.timestamp, 0.1)]}}
+        number_processes = min(num_processes, len(task_list))
+        #raise Exception("At least one window is needed to compute" "an adjoint source.")
 
     print("Starting adjoint source calculation")
     with multiprocessing.Pool(number_processes) as pool:
@@ -533,6 +550,15 @@ def run(info):
 
         pool.close()
         pool.join()
+    
+    if all_adj_srcs == {dummy_station: {}}:
+        forced = True
+        all_adj_srcs = {dummy_station: {dummy_station+"..BHN": {'misfit': 1, 'adj_source': ds.waveforms[dummy_station][dummy_tag][0].trim(starttime=start, endtime=start+300)},
+                                      dummy_station+"..BHZ": {'misfit': 1, 'adj_source': ds.waveforms[dummy_station][dummy_tag][0].trim(starttime=start, endtime=start+300)},
+                                      dummy_station+"..BHE": {'misfit': 1, 'adj_source': ds.waveforms[dummy_station][dummy_tag][0].trim(starttime=start, endtime=start+300)}}}
+    
+    
+    print(all_adj_srcs)
 
     # Write adjoint sources
     sta_with_sources = [k for k, v in all_adj_srcs.items() if v]
@@ -572,11 +598,16 @@ def run(info):
                     n_comp = all_adj_srcs[station][channel]["adj_source"].data
                 elif channel[-1] == "Z":
                     z_comp = all_adj_srcs[station][channel]["adj_source"].data
-
-            zne = (
-                np.array((z_comp, n_comp, e_comp))
-                * station_weights[station]["station_weight"]
-            )
+            if forced == True:
+                zne = (
+                    np.array((z_comp, n_comp, e_comp))
+                    * 1
+                )
+            else:
+                zne = (
+                    np.array((z_comp, n_comp, e_comp))
+                    * station_weights[station]["station_weight"]
+                )
             # zne = np.array((z_comp, n_comp, e_comp))
             # replace name to match the forward output run from salvus
             new_station_name = station.replace(".", "_")
@@ -596,7 +627,13 @@ def run(info):
             continue
         misfit_dict[station] = {}
         for trace in all_adj_srcs[station].keys():
-            station_tr_misfit = (
+            if forced == True:
+                station_tr_misfit = (
+                all_adj_srcs[station][trace]["misfit"]
+                * 1
+            )
+            else:
+                station_tr_misfit = (
                 all_adj_srcs[station][trace]["misfit"]
                 * station_weights[station]["station_weight"]
             )

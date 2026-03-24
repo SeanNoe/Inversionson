@@ -10,6 +10,7 @@ from optson.vector import Vec
 from inversionson.helpers.regularization_helper import RegularizationHelper
 from inversionson.helpers.gradient_summer import GradientSummer
 from inversionson.helpers.iteration_listener import IterationListener
+from inversionson.helpers.plotting_helper import Plotter
 from inversionson.utils import (
     get_list_hash,
     mesh_to_vector,
@@ -272,8 +273,13 @@ class Problem(Prob):
                 sum_vpv_vph=False,
                 store_norms=True,
             )
+            
             if self.smooth_gradients:
                 self._write_smoothing_task(model, indices, raw_grad_f)
+
+        if summed_status:
+
+            Plotter(project=self.project).plot_rays()
 
     def g(self, model: ModelProxy, indices: Optional[List[int]] = None) -> Vec:
         """Computes the gradient for Optson.
@@ -287,9 +293,13 @@ class Problem(Prob):
         Returns:
             Vec: A gradient vector.
         """
+
+        summed_status = False
         # First ensure the batch gradient is there.
         if model.descriptor not in self.completed_full_batches:
             self._g(model, model.batch or None)
+
+        summed_status = True
 
         # Collect all the relevant raw grads.
         for index_set in self.get_remaining_batch_indices(model):

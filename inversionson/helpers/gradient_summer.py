@@ -116,7 +116,7 @@ class GradientSummer(object):
 
         # Call script
         self.print("Remote summing of gradients started...")
-        hpc_cluster.run_ssh_command(f"python {remote_script} {remote_toml}")
+        hpc_cluster.execute_command(f"source {self.project.config.hpc.conda_location}; conda activate {self.project.config.hpc.conda_env_name}; python {remote_script} {remote_toml}")
         self.print("Remote summing completed...")
 
         if store_norms:

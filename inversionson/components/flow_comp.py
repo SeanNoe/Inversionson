@@ -312,6 +312,7 @@ class SalvusFlow(Component):
         """
 
         w = Waveform()
+	#w.output.memory_per_rank_in_MB = 70000.0
 
         # make sure the dictionary is compatible
         schema_validator.validate(value=dictionary, schema=w._schema, pretty_error=True)
@@ -376,6 +377,7 @@ class SalvusFlow(Component):
         remote_mesh = adjoint_sim_dict["domain"]["mesh"]["filename"]
         self._set_mesh_paths(adjoint_sim_dict)
         w = self.simulation_from_dict(adjoint_sim_dict, self.project.lasif.master_mesh)
+        #w.output.memory_per_rank_in_MB = 70000.0
         w.set_mesh(f"REMOTE:{str(remote_mesh)}")
         return w
 

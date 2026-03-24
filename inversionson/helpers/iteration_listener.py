@@ -212,7 +212,7 @@ class IterationListener(object):
         tmp_remote_path = f"{remote_proc_path}_tmp"
         if not hpc_cluster.remote_exists(remote_proc_path):
             hpc_cluster.remote_put(local_proc_file, tmp_remote_path)
-            hpc_cluster.run_ssh_command(f"mv {tmp_remote_path} {remote_proc_path}")
+            hpc_cluster.execute_command(f"mv {tmp_remote_path} {remote_proc_path}")
 
         if "VPV" in self.project.config.inversion.inversion_parameters:
             parameterization = "tti"
@@ -228,7 +228,7 @@ class IterationListener(object):
             )
             new_window_path = remote_window_dir / get_window_filename(event, iteration)
             # copy the windows over to ensure it works in the future.
-            hpc_cluster.run_ssh_command(f"cp {window_path} {new_window_path}")
+            hpc_cluster.execute_command(f"cp {window_path} {new_window_path}")
         else:
             windowing_needed = True
             window_path = remote_window_dir / get_window_filename(event, iteration)
@@ -827,9 +827,10 @@ class IterationListener(object):
         remote_toml = remote_inversionson_dir / toml_filename
         self._write_and_upload_toml(toml_filename, info, remote_toml)
         # Call script
-        _, stdout, stderr = hpc_cluster.run_ssh_command(
-            f"python {remote_script} {remote_toml}"
+        _, stdout, stderr = hpc_cluster.execute_command(
+            f"source {self.project.config.hpc.conda_location}; conda activate {self.project.config.hpc.conda_env_name}; python {remote_script} {remote_toml}"
         )
+        print(stdout)
         if "Remote source cut completed successfully" in stdout[0]:
             self.print(
                 f"Source cut and clip completed for {event}.", emoji_alias=":scissors:"

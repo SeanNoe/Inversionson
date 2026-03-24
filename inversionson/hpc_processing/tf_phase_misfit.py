@@ -226,6 +226,9 @@ def calculate_adjoint_source(
     # Compute the phase misfit
     dnu = nu[1] - nu[0]
 
+    #print(DP, dnu)
+    #print(0.5 * np.sum((weight * DP)**2) * dt_new * dnu)
+
     i = ne.evaluate("sum(weight ** 2 * DP ** 2)")
 
     phase_misfit = np.sqrt(i * dt_new * dnu) * window_weight
