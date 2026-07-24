@@ -30,7 +30,7 @@ def sum_gradient(
     :rtype list
     """
     first = True
-    tmp_file = "temo_gradient_sum.h5"
+    tmp_file = "/capstor/scratch/cscs/cschille/temo_gradient_sum.h5"
     gradient_norms = []
     for grad_file in gradients:
         if first:

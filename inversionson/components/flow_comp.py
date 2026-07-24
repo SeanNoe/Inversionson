@@ -13,12 +13,13 @@ from salvus.flow import schema_validator
 
 import salvus.flow
 from salvus.flow.simple_config.simulation import Waveform  # type: ignore
-from salvus.flow.sites import job as s_job, BaseSite  # type: ignore
+from salvus.flow.executors import job as s_job # type: ignore
+from salvus.flow.executors import BaseExecutor
 from salvus.flow.api import get_site
 from inversionson import InversionsonError
 from salvus.mesh.unstructured_mesh import UnstructuredMesh  # type: ignore
 from salvus.flow.db import SalvusFlowDoesNotExistDBException  # type: ignore
-from salvus.flow.sites.salvus_job import SalvusJob  # type: ignore
+from salvus.flow.executors.salvus_job import SalvusJob  # type: ignore
 from pathlib import Path
 
 if TYPE_CHECKING:
@@ -51,7 +52,7 @@ class SalvusFlow(Component):
         )
 
     @property
-    def hpc_cluster(self) -> BaseSite:
+    def hpc_cluster(self) -> BaseExecutor:
         if not self.__hpc_cluster:
             self.__hpc_cluster = get_site(self.project.config.hpc.sitename)
         return self.__hpc_cluster
@@ -63,7 +64,7 @@ class SalvusFlow(Component):
     ) -> None:
         tmp_remote_file = f"{remote_file}_tmp"
         self.hpc_cluster.remote_put(local_file, tmp_remote_file)
-        self.hpc_cluster.run_ssh_command(f"mv {tmp_remote_file} {remote_file}")
+        self.hpc_cluster.execute_command(f"mv {tmp_remote_file} {remote_file}")
 
     def safe_get(
         self,
@@ -312,6 +313,7 @@ class SalvusFlow(Component):
         """
 
         w = Waveform()
+        #w.output.memory_per_rank_in_MB = 70000.0
 
         # make sure the dictionary is compatible
         schema_validator.validate(value=dictionary, schema=w._schema, pretty_error=True)
@@ -376,6 +378,7 @@ class SalvusFlow(Component):
         remote_mesh = adjoint_sim_dict["domain"]["mesh"]["filename"]
         self._set_mesh_paths(adjoint_sim_dict)
         w = self.simulation_from_dict(adjoint_sim_dict, self.project.lasif.master_mesh)
+        #w.output.memory_per_rank_in_MB = 70000.0
         w.set_mesh(f"REMOTE:{str(remote_mesh)}")
         return w
 
@@ -450,7 +453,7 @@ class SalvusFlow(Component):
 
     def get_job_status(
         self, event: str, sim_type: str, iteration: str = "current"
-    ) -> salvus.flow.sites.types.JobStatus:
+    ) -> salvus.flow.executors.types.JobStatus:
         """
         Check the status of a salvus opt job
 
@@ -505,7 +508,7 @@ class SalvusFlow(Component):
         for p in [job_rpath, job_tmppath]:
             if self.hpc_cluster.remote_exists(p):
                 print(f"Deleting {str(p)}")
-                self.hpc_cluster.run_ssh_command(f"rm -r {str(p)}")
+                self.hpc_cluster.execute_command(f"rm -r {str(p)}")
 
     def delete_remote_content(
         self,

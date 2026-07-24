@@ -7,9 +7,9 @@ import toml
 import json
 from pathlib import Path
 import salvus.flow.api as sapi  # type: ignore
-from salvus.flow.sites import site_utils
+from salvus.flow.executors import executor_utils
 from inversionson.helpers.remote_job_listener import RemoteJobListener
-from salvus.flow.sites import job, remote_io_site  # type: ignore
+from salvus.flow.executors import job #, remote_io_site  # type: ignore
 from inversionson.utils import (
     get_misfits_filename,
     get_window_filename,
@@ -212,7 +212,7 @@ class IterationListener(object):
         tmp_remote_path = f"{remote_proc_path}_tmp"
         if not hpc_cluster.remote_exists(remote_proc_path):
             hpc_cluster.remote_put(local_proc_file, tmp_remote_path)
-            hpc_cluster.run_ssh_command(f"mv {tmp_remote_path} {remote_proc_path}")
+            hpc_cluster.execute_command(f"mv {tmp_remote_path} {remote_proc_path}")
 
         if "VPV" in self.project.config.inversion.inversion_parameters:
             parameterization = "tti"
@@ -228,7 +228,7 @@ class IterationListener(object):
             )
             new_window_path = remote_window_dir / get_window_filename(event, iteration)
             # copy the windows over to ensure it works in the future.
-            hpc_cluster.run_ssh_command(f"cp {window_path} {new_window_path}")
+            hpc_cluster.execute_command(f"cp {window_path} {new_window_path}")
         else:
             windowing_needed = True
             window_path = remote_window_dir / get_window_filename(event, iteration)
@@ -275,17 +275,17 @@ class IterationListener(object):
         wall_time = self.project.config.hpc.proc_wall_time
 
         commands = [
-            site_utils.RemoteCommand(
+            executor_utils.RemoteCommand(
                 command="mkdir output", execute_with_mpi=False
             ),
-            site_utils.RemoteCommand(
+            executor_utils.RemoteCommand(
                 command=f"python {remote_script} {remote_toml}", execute_with_mpi=False
             ),
         ]
 
         if self.project.config.hpc.conda_env_name:
             conda_command = [
-                site_utils.RemoteCommand(
+                executor_utils.RemoteCommand(
                     command=f"conda activate {self.project.config.hpc.conda_env_name}",
                     execute_with_mpi=False,
                 )
@@ -293,7 +293,7 @@ class IterationListener(object):
             commands = conda_command + commands
             if self.project.config.hpc.conda_location:
                 source_command = [
-                    site_utils.RemoteCommand(
+                    executor_utils.RemoteCommand(
                         command=f"source {self.project.config.hpc.conda_location}",
                         execute_with_mpi=False,
                     )
@@ -827,8 +827,8 @@ class IterationListener(object):
         remote_toml = remote_inversionson_dir / toml_filename
         self._write_and_upload_toml(toml_filename, info, remote_toml)
         # Call script
-        _, stdout, stderr = hpc_cluster.run_ssh_command(
-            f"python {remote_script} {remote_toml}"
+        _, stdout, stderr = hpc_cluster.execute_command(
+            f"source {self.project.config.hpc.conda_location}; conda activate {self.project.config.hpc.conda_env_name}; python {remote_script} {remote_toml}"
         )
         if "Remote source cut completed successfully" in stdout[0]:
             self.print(

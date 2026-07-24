@@ -61,6 +61,16 @@ def get_dynamic_mini_batch_opt(project: Project):
         batch_manager=ibm,
     )
 
+def get_non_stochastic_lbfgs_opt(project: Project):
+    "Inversionson without dynamic mini-batches"
+    problem = Problem(project=project, smooth_gradients=True)
+    update = BasicTRUpdate(verbose=True)
+    return Optimizer(
+        problem=problem,
+        update=update,
+        stopping_criterion=SC,
+        monitor=MONITOR
+    )
 
 def gradient_test(project: Project):
     from optson.gradient_test import GradientTest
@@ -87,6 +97,7 @@ def run_optson(project: Project):
 
     # Choose a version of the Optimizer or implememt your own
     # opt = get_adam_opt(project)
+    # opt = get_non_stochastic_lbfgs_opt(project)
     opt = get_dynamic_mini_batch_opt(project)
     opt.iterate(
         x0=mesh_to_vector(

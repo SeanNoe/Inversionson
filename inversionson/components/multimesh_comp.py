@@ -1,7 +1,7 @@
 from __future__ import annotations
 import pathlib
-from salvus.flow.sites import job, remote_io_site  # type: ignore
-from salvus.flow.sites import site_utils
+from salvus.flow.executors import job #, remote_io_site  # type: ignore
+from salvus.flow.executors import executor_utils
 from .component import Component
 import os
 from pathlib import Path
@@ -302,9 +302,9 @@ class MultiMesh(Component):
 
         if self.project.config.inversion.absorbing_boundaries:
             side_sets = (
-                ["inner_boundary"]
-                if (
-                    "inner_boundary"
+                ["surface"]
+                if ( 
+                    "surface"
                     in self.project.lasif.lasif_comm.project.domain.get_side_set_names()
                 )
                 else [
@@ -359,7 +359,7 @@ class MultiMesh(Component):
         self,
         event: str,
         gradient: bool,
-    ) -> List[site_utils.RemoteCommand]:
+    ) -> List[executor_utils.RemoteCommand]:
         """
         Get the interpolation commands needed to do remote interpolations.
         If not gradient, we will look for a smoothie mesh and create it if needed.
@@ -383,22 +383,22 @@ class MultiMesh(Component):
         )
 
         commands = [
-            site_utils.RemoteCommand(
+            executor_utils.RemoteCommand(
                 command=f"cp {remote_toml} ./interp_info.toml",
                 execute_with_mpi=False,
             ),
-            site_utils.RemoteCommand(
+            executor_utils.RemoteCommand(
                 command=f"cp {mesh_to_interpolate_from} ./from_mesh.h5",
                 execute_with_mpi=False,
             ),
-            site_utils.RemoteCommand(
+            executor_utils.RemoteCommand(
                 command=f"cp {self.project.remote_paths.interp_script} ./interpolate.py",
                 execute_with_mpi=False,
             ),
-            site_utils.RemoteCommand(
+            executor_utils.RemoteCommand(
                 command="mkdir output", execute_with_mpi=False
             ),
-            site_utils.RemoteCommand(
+            executor_utils.RemoteCommand(
                 command="python interpolate.py ./interp_info.toml",
                 execute_with_mpi=False,
             ),
@@ -418,7 +418,7 @@ class MultiMesh(Component):
                 raw_file = self.project.config.hpc.remote_data_dir / f"{event}.h5"
 
                 copy_data_command = [
-                    site_utils.RemoteCommand(
+                    executor_utils.RemoteCommand(
                         command=f"cp {raw_file} raw_event_data.h5",
                         execute_with_mpi=False,
                     )
@@ -427,7 +427,7 @@ class MultiMesh(Component):
 
         if self.project.config.hpc.conda_env_name:
             conda_command = [
-                site_utils.RemoteCommand(
+                executor_utils.RemoteCommand(
                     command=f"conda activate {self.project.config.hpc.conda_env_name}",
                     execute_with_mpi=False,
                 )
@@ -436,7 +436,7 @@ class MultiMesh(Component):
 
             if self.project.config.hpc.conda_location:
                 source_command = [
-                    site_utils.RemoteCommand(
+                    executor_utils.RemoteCommand(
                         command=f"source {self.project.config.hpc.conda_location}",
                         execute_with_mpi=False,
                     )

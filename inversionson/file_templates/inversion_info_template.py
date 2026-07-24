@@ -43,7 +43,8 @@ class MeshingConfig:
 
 @dataclass(frozen=True)
 class HPCSettings:
-    sitename: str = "local"
+    sitename: str = "local_gpu"
+    sitename_smoothing: str = "local_cpu"
     max_reposts: int = 3
     sleep_time_in_seconds: float = 30.0
     conda_env_name: str = "salvus"
